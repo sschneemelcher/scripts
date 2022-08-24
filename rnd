@@ -1,0 +1,65 @@
+#!/bin/sh
+#
+# Implementation of Blum Blum Shub PRNG algorithm
+#
+# POSIX compliant when used with the -p flag, otherwise it uses
+# the builtin conversion of bits to ints in shells like bash or ksh
+#
+# use like this `./rnd 100` to create 100 random numbers
+usage() { echo "Usage: $0 [-p] [-b bits] amount" 1>&2; exit 1; }
+
+bits=31
+posix=1
+while getopts ":pb:" o; do
+    case "${o}" in
+        p)
+            posix=0
+            ;;
+        b)  bits=${OPTARG}
+            ;;
+        *)
+            usage
+            ;;
+    esac
+done
+shift $((OPTIND-1))
+if [ "$#" -eq 0 ]; then
+    usage
+fi
+
+p=383; q=6143; s=157; N="$((p * q))" # prime numbers and N
+l="$(($1 * bits))"; bin=""           # bin will contain the bits of each number 
+
+if [ "$N" -gt 3037000499 ]; then     # if N is bigger we could encounter 
+    printf "overflow .. terminating" # an overflow for ((s * s % N))
+    quit
+fi
+
+bin_to_int() {
+  bin="$1" 
+  ret=0
+  for i in $(seq "$((${#1}))"); do
+    c="${bin#"${bin%?}"}"
+    ret=$((ret + c * (1 << (i - 1))))
+    bin="${bin%?}"
+  done
+  echo "$ret"
+}
+
+main() {
+    for i in $(seq "$l"); do
+        s="$((s * s % N))"               # bbs algorithm
+        if [ "$((i % bits))" -eq 0 ]; then
+            if [ "$posix" -eq 0 ]; then
+                printf "%s\n" "$(bin_to_int "$bin$((s % 2))")" # print bits converted to integer 
+            else
+                printf "%s\n" "$((2#$bin$((s % 2))))" # print bits converted to integer 
+            fi
+            bin="" 
+        else
+            bin="$bin$((s % 2))"         # collect the bit for the round
+        fi
+    done
+}
+
+main "$@"
