@@ -2,6 +2,8 @@
 
 # a million different ways to do this
 
+usage() { echo "Usage: $0 file from [to]" 1>&2; exit 1; }
+
 builtin() {
     i=0
     while read -r line; do    
@@ -18,7 +20,6 @@ builtin() {
 
 
 head_tail() {
-    #line_count=$(wc -l "$1" | cut -d ' ' -f 1)
     head -n "$3" "$1" | tail -n "$(($3 + 1 - $2))"
 }
 
@@ -34,4 +35,12 @@ cat_grep() {
     done
 }
 
-head_tail "$@"
+if [ "$#" -eq 2 ]; then
+    set -- "$1" "$2" "$2"
+    head_tail "$@"
+elif [ "$#" -eq 3 ]; then
+    head_tail "$@"
+else
+    usage
+fi
+
