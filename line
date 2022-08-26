@@ -17,9 +17,8 @@ done
 shift $((OPTIND-1))
 
 builtin() {
-    IFS=''
     i=1
-    while read -r line; do    
+    while IFS= read -r line; do    
         if [ "$i" -le "$3" ]; then
             if [ "$i" -ge "$2" ]; then
                 if [ -z "$numbers" ]; then
