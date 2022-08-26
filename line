@@ -2,14 +2,31 @@
 
 # a million different ways to do this
 
-usage() { echo "Usage: $0 file from [to]" 1>&2; exit 1; }
+usage() { echo "Usage: $0 [-n] file from [to]" 1>&2; exit 1; }
+
+while getopts ":n" o; do
+    case "${o}" in
+        n)
+            numbers=1
+            ;;
+        *)
+            usage
+            ;;
+    esac
+done
+shift $((OPTIND-1))
 
 builtin() {
-    i=0
+    IFS=''
+    i=1
     while read -r line; do    
         if [ "$i" -le "$3" ]; then
             if [ "$i" -ge "$2" ]; then
-                printf "    $i\t%s\n" "$line"
+                if [ -z "$numbers" ]; then
+                    printf "%s\n" "$line"
+                else
+                    printf "    $i\t%s\n" "$line"
+                fi
             fi
         else 
             break
@@ -37,9 +54,9 @@ cat_grep() {
 
 if [ "$#" -eq 2 ]; then
     set -- "$1" "$2" "$2"
-    head_tail "$@"
+    builtin "$@"
 elif [ "$#" -eq 3 ]; then
-    head_tail "$@"
+    builtin "$@"
 else
     usage
 fi
