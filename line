@@ -4,6 +4,8 @@
 
 usage() { echo "Usage: $0 [-n] file from [to]" 1>&2; exit 1; }
 
+tmp="/tmp/line_tmp"
+
 while getopts ":n" o; do
     case "${o}" in
         n)
@@ -51,8 +53,20 @@ cat_grep() {
     done
 }
 
-if [ "$#" -eq 2 ]; then
-    set -- "$1" "$2" "$2"
+if [ ! -f "$1" ]; then
+    cat > "$tmp"
+    pipe=1
+fi
+
+if [ "$#" -eq 1 ]; then
+    set -- "$tmp" "$1" "$1"
+    builtin "$@"
+elif [ "$#" -eq 2 ]; then
+    if [ -f "$1" ]; then
+        set -- "$1" "$2" "$2"
+    else 
+        set -- "$tmp" "$1" "$2"
+    fi
     builtin "$@"
 elif [ "$#" -eq 3 ]; then
     builtin "$@"
@@ -60,3 +74,6 @@ else
     usage
 fi
 
+if [ -n "$pipe" ]; then
+    rm "$tmp"
+fi
